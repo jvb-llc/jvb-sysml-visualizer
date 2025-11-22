@@ -4,7 +4,10 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 
 ## Functional Requirements
 
-*   **F-1 (Data Loading):** The `jvb-sysml-visualizer`'s C++ Backend shall load SysML model data. This data is provided by the local `jvb-cli` (acting as a local WebSocket server) as SysML file content. The Backend shall then process this content using the `jvb-sysml-analyzer` (Haskell), and generate scene graph data in Protocol Buffers (Protobuf) binary format for the Frontend.
+*   **F-1 (Data Loading):** The `jvb-sysml-visualizer` shall support two data loading modes:
+    1.  **Embedded Mode:** Initial SysML model content is provided by the local `jvb-cli`.
+    2.  **Standalone Mode:** SysML model content is uploaded or pasted directly by the user via the UI.
+    In both cases, the content is sent to the Remote C++ Backend for processing and scene graph generation.
 *   **F-2 (Planar Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive SysML Block Diagrams as planar objects positioned within a 3D environment.
 *   **F-3 (Planar Internal Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive SysML Internal Block Diagrams as planar objects positioned within a 3D environment, showing the internal structure of blocks.
 *   **F-4 (2D Navigation):** The user shall be able to pan, zoom, and navigate the planar diagrams using standard mouse and keyboard controls.
@@ -13,11 +16,12 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **F-7 (3D Breakouts):** The user shall be able to select a component in a planar diagram and view it as an interactive 3D model rendered in relief.
 *   **F-8 (Diagram Drill-Down with Animation):** When a user double-clicks on a diagram element that represents a subsystem, the `jvb-sysml-visualizer` shall navigate into the detailed diagram of that subsystem using a 3D animation (e.g., flying into the diagram) to simulate moving deeper into the hierarchy.
 *   **F-9 (Navigation Controls with Animation):** The `jvb-sysml-visualizer` shall provide navigation controls (e.g., "zoom out") that trigger a reverse 3D animation (e.g., flying out) to return to the higher-level diagram, reinforcing the hierarchical context.
-*   **F-10 (Dual Connection Management):** The `jvb-sysml-visualizer` WASM frontend shall maintain two concurrent WebSocket connections: an authenticated connection to the remote C++ Backend for receiving scene graph data, and a local connection to the `jvb-cli` for receiving control commands and initial file context.
+*   **F-10 (Connection Management):** The `jvb-sysml-visualizer` WASM frontend shall always maintain an authenticated connection to the remote C++ Backend for data. **If** launched in Embedded Mode, it shall *also* maintain a local connection to the `jvb-cli` for control and context.
+*   **F-11 (Standalone Data Input):** When running in Standalone Mode, the `jvb-sysml-visualizer` shall provide UI controls to allow the user to upload a SysML file or paste SysML text directly.
 
 ## Non-Functional Requirements
 
-*   **NF-1 (Performance):** The WASM application shall load and render a medium-sized SysML model (e.g., 100 blocks) in under 2 seconds.
+*   **NF-1 (Performance):** The system shall provide a responsive user experience during model loading, navigation, and interaction, minimizing perceived latency.
 *   **NF-2 (Browser Compatibility):** The `jvb-sysml-visualizer` shall be compatible with the latest versions of Chrome, Firefox, and Safari.
 *   **NF-3 (Integration):** The visualizer shall provide a clear API for the `jvb-cli` to embed and interact with it.
 *   **NF-4 (Build System):** The C++ project shall use CMake as its build system.
@@ -25,14 +29,14 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **NF-6 (Protobuf Compilation):** The build system shall include a step to compile `.proto` files into C++ source code using the `protoc` compiler.
 *   **NF-7 (3D Rendering):** The visualization shall be implemented using a 3D rendering library suitable for C++ and WASM (e.g., Sokol Gfx, bgfx).
 *   **NF-8 (UI):** All UI elements (e.g., property panels, buttons) shall be created using the ImGui immediate mode GUI library.
-*   **NF-9 (Embedded Rendering):** For local use, the `jvb-sysml-visualizer` WASM frontend shall be capable of running in an embedded window (e.g., CEF) launched by the `jvb-cli`. In this mode, `jvb-cli` shall act as a local WebSocket server to provide SysML model content (not just paths or context) directly to the remote C++ Backend for processing, potentially relayed via the WASM frontend.
+*   **NF-9 (Embedded Rendering):** For local use, the `jvb-sysml-visualizer` WASM frontend shall be capable of running in an embedded window (e.g., CEF) launched by the `jvb-cli`. The frontend shall detect this mode (e.g., via URL query parameter) and establish the local WebSocket connection to `jvb-cli`.
 
 ## Architectural Requirements
 
 *   **A-1 (Component Architecture):** The `jvb-sysml-visualizer` system shall consist of three main components:
     1.  **Remote C++ Backend:** A native executable acting as an authenticated WebSocket Server for heavy processing, visual logic, and semantic understanding.
     2.  **C++ Frontend:** A WASM executable responsible for rendering and user interaction.
-    3.  **Local Controller (jvb-cli):** A local tool acting as a secondary WebSocket server for providing initial SysML model content and local control to the C++ Backend.
+    3.  **Local Controller (jvb-cli):** (Optional) A local tool acting as both a client to the Remote C++ Backend (for data upload) and a secondary WebSocket server to the Frontend (for local control).
 *   **A-2 (Backend Role & SysML Analysis):** The C++ Backend shall be responsible for:
     *   Receiving SysML model content from the `jvb-cli` (relayed via the WASM frontend or direct connection).
     *   Interfacing with the `jvb-sysml-analyzer` (Haskell) to validate and achieve semantic understanding of SysML models.
