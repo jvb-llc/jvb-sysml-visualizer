@@ -11,6 +11,8 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **F-5 (Element Selection):** The user shall be able to select individual elements in the diagram (e.g., blocks, ports).
 *   **F-6 (Property Display):** When an element is selected, the `jvb-sysml-visualizer` shall display its properties (e.g., name, type, definition).
 *   **F-7 (3D Breakouts):** The user shall be able to select a component in a 2D diagram and view it as an interactive 3D model.
+*   **F-8 (Diagram Drill-Down):** When a user double-clicks on a diagram element that represents a subsystem with more detailed diagrams available, the `jvb-sysml-visualizer` shall navigate into and display the detailed diagram of that subsystem, maintaining the context of the parent diagram.
+*   **F-9 (Navigation Controls):** The `jvb-sysml-visualizer` shall provide clear navigation controls (e.g., breadcrumbs, "zoom out" button) to allow the user to easily return to higher-level diagrams.
 
 ## Non-Functional Requirements
 
@@ -39,3 +41,5 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **CH-5 (IP Separation Enforcement):** A technical strategy must be defined to enforce the strict frontend/backend separation within a single C++ project, ensuring no proprietary code is accidentally compiled into the distributable WASM frontend.
 *   **CH-6 (Protobuf Schema Design):** The initial version of the `.proto` schema must be designed. This schema is a critical interface between three components (Haskell analyzer, C++ backend, C++ frontend) and must be carefully considered.
 *   **CH-7 (2D-in-3D Rendering Strategy):** A decision must be made on how to implement the 2D diagram rendering on top of a 3D library (e.g., orthographic projection vs. a dedicated 2D abstraction) to ensure both performance and ease of implementation.
+*   **CH-8 (Interactive Event Handling):** Implementing robust and responsive event handling for mouse (e.g., double-click for drill-down, click-and-drag for panning) and keyboard controls within the WASM environment, especially considering potential interactions with ImGui and the underlying 3D library.
+*   **CH-9 (Hierarchical Data Representation for Navigation):** The Protobuf schema needs to effectively represent the hierarchical structure of SysML models to support drill-down and drill-up navigation, ensuring that the necessary contextual information is available at each level of detail.
