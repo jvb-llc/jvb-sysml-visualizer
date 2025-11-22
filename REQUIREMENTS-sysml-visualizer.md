@@ -19,6 +19,7 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **F-10 (Connection Management):** The `jvb-sysml-visualizer` WASM frontend shall always maintain an authenticated connection to the remote C++ Backend for data. **If** launched in Embedded Mode (by `jvb-cli`), it shall *also* maintain a local WebSocket connection to the `jvb-cli` for control commands and synchronization signals.
 *   **F-11 (Standalone Data Input):** When running in Standalone Mode, the `jvb-sysml-visualizer` shall provide UI controls to allow the user to upload a SysML file or paste SysML text directly.
 *   **F-12 (Authentication UI):** When running in Standalone Mode (or if automatic authentication fails), the `jvb-sysml-visualizer` shall provide a user interface for logging in to the Remote C++ Backend.
+*   **F-13 (CLI Authentication):** In Embedded Mode, the `jvb-cli` shall handle authentication with the Remote C++ Backend (e.g., via API keys or tokens) to perform the initial model upload and obtain the Session ID.
 
 ## Non-Functional Requirements
 
@@ -30,7 +31,7 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **NF-6 (Protobuf Compilation):** The build system shall include a step to compile `.proto` files into C++ source code using the `protoc` compiler.
 *   **NF-7 (3D Rendering):** The visualization shall be implemented using a 3D rendering library suitable for C++ and WASM (e.g., Sokol Gfx, bgfx).
 *   **NF-8 (UI):** All UI elements (e.g., property panels, buttons) shall be created using the ImGui immediate mode GUI library.
-*   **NF-9 (Embedded Rendering):** When launched by `jvb-cli` in an embedded CEF window, the `jvb-sysml-visualizer` WASM frontend shall establish a local WebSocket connection to `jvb-cli` for control commands and initial SysML model content. This connection is not applicable to standalone browser deployments.
+*   **NF-9 (Embedded Rendering):** For local use, the `jvb-sysml-visualizer` WASM frontend shall be capable of running in an embedded window (e.g., CEF) launched by the `jvb-cli`. In this mode, `jvb-cli` shall act as a local WebSocket server to pass the **Session ID** (obtained from the backend upload) and provide control signals to the visualizer.
 
 ## Architectural Requirements
 
@@ -66,4 +67,3 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **CH-9 (Hierarchical Data Representation for Navigation):** The Protobuf schema needs to effectively represent the hierarchical structure of SysML models to support drill-down and drill-up navigation, ensuring that the necessary contextual information is available at each level of detail.
 *   **CH-10 (Scene Graph Optimization):** A strategy for efficient transmission and updates of the scene graph is required to ensure high-performance rendering (NF-1) and responsiveness, balancing the richness of the data with the bandwidth constraints of the WebSocket connection.
 *   **CH-11 (High-Quality Text Rendering):** Rendering crisp, readable text for labels and properties within a dynamic 3D environment (NF-7) that scales correctly with zoom (F-4) presents a significant technical challenge, likely requiring techniques like Signed Distance Fields (SDF).
-*   **CH-13 (Mixed Content Security):** In a standalone browser deployment (NF-2), connecting the secure WASM application (HTTPS) to a local `jvb-cli` WebSocket (ws://localhost) may be blocked by browser "Mixed Content" security policies. A robust workaround or configuration strategy is required for this deployment scenario.
