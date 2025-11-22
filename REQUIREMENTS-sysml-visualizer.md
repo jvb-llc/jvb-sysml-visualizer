@@ -4,15 +4,16 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 
 ## Functional Requirements
 
-*   **F-1 (Data Loading):** The `jvb-sysml-visualizer`'s C++ Backend shall load SysML model data, process it using the `jvb-sysml-analyzer` (Haskell), and then generate rendering instructions in Protocol Buffers (Protobuf) binary format.
-*   **F-2 (2D Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive 2D SysML Block Diagrams, including blocks, ports, and connectors.
-*   **F-3 (2D Internal Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive 2D SysML Internal Block Diagrams, showing the internal structure of blocks.
-*   **F-4 (2D Navigation):** The user shall be able to pan, zoom, and navigate the 2D diagrams using standard mouse and keyboard controls.
+*   **F-1 (Data Loading):** The `jvb-sysml-visualizer` shall support a dual-loading model: the initial SysML file context is provided by the local `jvb-cli` (acting as a local controller), while the heavy rendering data and layout are processed and loaded from the remote C++ Backend via `jvb-sysml-analyzer`.
+*   **F-2 (Planar Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive SysML Block Diagrams as planar objects positioned within a 3D environment.
+*   **F-3 (Planar Internal Block Diagram Rendering):** The `jvb-sysml-visualizer` shall render interactive SysML Internal Block Diagrams as planar objects positioned within a 3D environment, showing the internal structure of blocks.
+*   **F-4 (2D Navigation):** The user shall be able to pan, zoom, and navigate the planar diagrams using standard mouse and keyboard controls.
 *   **F-5 (Element Selection):** The user shall be able to select individual elements in the diagram (e.g., blocks, ports).
 *   **F-6 (Property Display):** When an element is selected, the `jvb-sysml-visualizer` shall display its properties (e.g., name, type, definition).
-*   **F-7 (3D Breakouts):** The user shall be able to select a component in a 2D diagram and view it as an interactive 3D model.
-*   **F-8 (Diagram Drill-Down):** When a user double-clicks on a diagram element that represents a subsystem with more detailed diagrams available, the `jvb-sysml-visualizer` shall navigate into and display the detailed diagram of that subsystem, maintaining the context of the parent diagram.
-*   **F-9 (Navigation Controls):** The `jvb-sysml-visualizer` shall provide clear navigation controls (e.g., breadcrumbs, "zoom out" button) to allow the user to easily return to higher-level diagrams.
+*   **F-7 (3D Breakouts):** The user shall be able to select a component in a planar diagram and view it as an interactive 3D model rendered in relief.
+*   **F-8 (Diagram Drill-Down with Animation):** When a user double-clicks on a diagram element that represents a subsystem, the `jvb-sysml-visualizer` shall navigate into the detailed diagram of that subsystem using a 3D animation (e.g., flying into the diagram) to simulate moving deeper into the hierarchy.
+*   **F-9 (Navigation Controls with Animation):** The `jvb-sysml-visualizer` shall provide navigation controls (e.g., "zoom out") that trigger a reverse 3D animation (e.g., flying out) to return to the higher-level diagram, reinforcing the hierarchical context.
+*   **F-10 (Dual Connection Management):** The `jvb-sysml-visualizer` WASM frontend shall maintain two concurrent WebSocket connections: an authenticated connection to the remote C++ Backend for receiving scene graph data, and a local connection to the `jvb-cli` for receiving control commands and initial file context.
 
 ## Non-Functional Requirements
 
@@ -24,11 +25,14 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **NF-6 (Protobuf Compilation):** The build system shall include a step to compile `.proto` files into C++ source code using the `protoc` compiler.
 *   **NF-7 (3D Rendering):** The visualization shall be implemented using a 3D rendering library suitable for C++ and WASM (e.g., Sokol Gfx, bgfx).
 *   **NF-8 (UI):** All UI elements (e.g., property panels, buttons) shall be created using the ImGui immediate mode GUI library.
-*   **NF-9 (Embedded Rendering):** For development and integration with `jvb-dev` outside of a full web browser, the `jvb-sysml-visualizer` shall support rendering its WASM frontend using the Chromium Embedded Framework (CEF).
+*   **NF-9 (Embedded Rendering):** For local use, the `jvb-sysml-visualizer` WASM frontend shall be capable of running in an embedded window (e.g., CEF) launched by the `jvb-cli`. In this mode, `jvb-cli` shall act as a local WebSocket server to provide file paths, initial context, and control signals to the visualizer.
 
 ## Architectural Requirements
 
-*   **A-1 (Component Architecture):** The `jvb-sysml-visualizer` project shall consist of two main components: a C++ Backend (native executable acting as a WebSocket Server) and a C++ Frontend (WASM executable).
+*   **A-1 (Component Architecture):** The `jvb-sysml-visualizer` system shall consist of three main components:
+    1.  **Remote C++ Backend:** A native executable acting as an authenticated WebSocket Server for heavy processing.
+    2.  **C++ Frontend:** A WASM executable responsible for rendering and user interaction.
+    3.  **Local Controller (jvb-cli):** A local tool acting as a secondary WebSocket server for providing initial context and local control.
 *   **A-2 (Backend Role & SysML Analysis):** The C++ Backend shall be responsible for:
     *   Interfacing with the `jvb-sysml-analyzer` (Haskell) to validate and understand SysML models.
     *   Processing the SysML model data.
