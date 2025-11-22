@@ -28,16 +28,17 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 
 ## Architectural Requirements
 
-*   **A-1 (Component Architecture):** The `jvb-sysml-visualizer` project shall consist of two main components: a C++ Backend (native executable) and a C++ Frontend (WASM executable).
+*   **A-1 (Component Architecture):** The `jvb-sysml-visualizer` project shall consist of two main components: a C++ Backend (native executable acting as a WebSocket Server) and a C++ Frontend (WASM executable).
 *   **A-2 (Backend Role & SysML Analysis):** The C++ Backend shall be responsible for:
     *   Interfacing with the `jvb-sysml-analyzer` (Haskell) to validate and understand SysML models.
     *   Processing the SysML model data.
     *   Generating the geometric rendering instructions and interactive view models.
 *   **A-3 (Frontend Role & IP Protection):** The C++ Frontend (WASM) shall be responsible for:
-    *   Receiving geometric rendering instructions and interactive view models via Protocol Buffers.
-    *   Strictly rendering these instructions.
+    *   Receiving rich scene graph data and interactive view models via Protocol Buffers.
+    *   Procedurally generating 3D geometry from this data (no external 3D asset loading).
+    *   Rendering the visualization.
     *   Containing no proprietary SysML processing logic.
-    *   Ensuring no SysML-specific IP is exposed through the downloaded WASM binary.
+    *   Ensuring no SysML-specific IP (business logic/formulas) is exposed through the downloaded WASM binary.
 *   **A-4 (Data Interface: Backend to Frontend):** The data interface for rendering instructions and interactive view models between the C++ Backend and the C++ Frontend shall be defined in a set of version-controlled Protocol Buffer (`.proto`) files.
 *   **A-5 (Data Interface: Backend to Analyzer):** The data interface between the C++ Backend and the `jvb-sysml-analyzer` (Haskell) shall be defined and versioned, considering the `jvb-sysml-analyzer`'s API (SMA-U-7).
 
@@ -52,6 +53,5 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 *   **CH-7 (2D-in-3D Rendering Strategy):** A decision must be made on how to implement the 2D diagram rendering on top of a 3D library (e.g., orthographic projection vs. a dedicated 2D abstraction) to ensure both performance and ease of implementation.
 *   **CH-8 (Interactive Event Handling):** Implementing robust and responsive event handling for mouse (e.g., double-click for drill-down, click-and-drag for panning) and keyboard controls within the WASM environment, especially considering potential interactions with ImGui and the underlying 3D library.
 *   **CH-9 (Hierarchical Data Representation for Navigation):** The Protobuf schema needs to effectively represent the hierarchical structure of SysML models to support drill-down and drill-up navigation, ensuring that the necessary contextual information is available at each level of detail.
-*   **CH-10 (Render Instruction Optimization):** Adhering to strict IP separation (A-3) by generating simple drawing commands can lead to performance bottlenecks. A strategy for efficient batching or instancing of these commands is required to ensure high-performance rendering (NF-1) without exposing proprietary logic.
+*   **CH-10 (Scene Graph Optimization):** A strategy for efficient transmission and updates of the scene graph is required to ensure high-performance rendering (NF-1) and responsiveness, balancing the richness of the data with the bandwidth constraints of the WebSocket connection.
 *   **CH-11 (High-Quality Text Rendering):** Rendering crisp, readable text for labels and properties within a dynamic 3D environment (NF-7) that scales correctly with zoom (F-4) presents a significant technical challenge, likely requiring techniques like Signed Distance Fields (SDF).
-*   **CH-12 (3D Asset Pipeline):** To support "interactive 3D breakouts" (F-7), a clear pipeline is needed for associating SysML blocks with external 3D model assets (e.g., glTF) and efficiently loading/streaming these assets into the WASM environment.
