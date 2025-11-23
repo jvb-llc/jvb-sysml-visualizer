@@ -24,10 +24,11 @@ This document outlines the detailed requirements for the `jvb-sysml-visualizer` 
 ## Challenges to be Addressed
 
 *   **CH-5 (IP Separation Enforcement):** A technical strategy must be defined to enforce the strict frontend/backend separation, ensuring no proprietary code is accidentally compiled into the distributable WASM frontend.
-*   **CH-6 (Protobuf Schema Design):** The initial version of the `.proto` schema must be designed. This schema is a critical interface between three components (Haskell analyzer, C++ backend, C++ frontend) and must be carefully considered.
-*   **CH-10 (Scene Graph Optimization):** A strategy for efficient transmission and updates of the scene graph is required to ensure high-performance rendering and responsiveness, balancing the richness of the data with the bandwidth constraints of the WebSocket connection.
-*   **CH-12 (Schema Synchronization):** With the frontend and backend in separate repositories, a robust mechanism (e.g., a shared git submodule for `.proto` files) is needed to ensure both build off the exact same version of the Protobuf definitions.
+*   **CH-6 (Protobuf Schema Design)::** The initial version of the `.proto` schema must be designed. This schema is a critical interface between three components (Haskell analyzer, C++ backend, C++ frontend) and must be carefully considered.
+*   **CH-10 (Scene Graph Optimization)::** A strategy for efficient transmission and updates of the scene graph is required to ensure high-performance rendering and responsiveness, balancing the richness of the data with the bandwidth constraints of the WebSocket connection.
+*   **CH-12 (Schema Synchronization)::** With the frontend and backend in separate repositories, a robust mechanism (e.g., a shared git submodule for `.proto` files) is needed to ensure both build off the exact same version of the Protobuf definitions.
 
 ## Resolved Challenges
 
 *   **CH-1 (Build Toolchain):** The challenge of a complex, multi-target build environment has been resolved by separating the project into two distinct repositories: `jvb-sysml-visualizer` (for the C++ Backend) and `jvb-sysml-visualizer-ui` (for the C++ Frontend/WASM). This allows each component to have its own simplified, independent build system.
+*   **CH-19 (Backend-Analyzer Interface):** Resolved by adopting **gRPC Protobuf** over a local socket connection. This enables high-performance, strongly-typed communication between the C++ Backend and the Haskell `jvb-sysml-analyzer`, leveraging the sidecar pattern for efficient deployment in containerized environments like Google Cloud Run or Kubernetes.
